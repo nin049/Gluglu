@@ -16,8 +16,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/scans', scanRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+// Health check (racine + /api/health pour o2switch)
+app.get('/', (req, res) => res.json({ status: 'ok', app: 'GluGlu API' }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', app: 'GluGlu API' }));
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Route introuvable' }));

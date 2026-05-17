@@ -1,10 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ⚠️ Remplace par ton URL o2switch en production
-const BASE_URL = __DEV__
-  ? 'http://192.168.1.X:3000/api'  // Ton IP locale en dev
-  : 'https://ton-domaine.com/api'; // Ton domaine o2switch
+const BASE_URL = 'https://gluglu-backend.ninoguinberteau.fr/api';
 
 const api = axios.create({ baseURL: BASE_URL });
 
@@ -18,6 +15,8 @@ api.interceptors.request.use(async (config) => {
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (data) => api.put('/auth/profile', data),
 };
 
 export const productsAPI = {

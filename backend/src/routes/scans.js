@@ -11,7 +11,7 @@ router.get('/history', authMiddleware, async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      `SELECT id, barcode, product_name, brand, risk_level, risk_score, ai_explanation, scanned_at
+      `SELECT id, barcode, product_name, brand, risk_level, risk_score, ai_explanation, ingredients, allergens, image_url, suspect_ingredients, scanned_at
        FROM scans
        WHERE user_id = ?
        ORDER BY scanned_at DESC

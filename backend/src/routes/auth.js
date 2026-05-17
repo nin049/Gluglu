@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 const SALT_ROUNDS = 12;
@@ -35,7 +36,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       token,
-      user: { id: result.insertId, name, email },
+      user: { id: result.insertId, name, email, intolerance_level: 'sensitive' },
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -69,7 +70,7 @@ router.post('/login', async (req, res) => {
 
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email, intolerance_level: user.intolerance_level || 'sensitive' },
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -77,4 +78,45 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// GET /api/auth/profile
+router.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id, name, email, intolerance_level FROM users WHERE id = ?',
+      [req.userId]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    res.json({ user: rows[0] });
+  } catch (err) {
+    console.error('Profile get error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// PUT /api/auth/profile
+router.put('/profile', authMiddleware, async (req, res) => {
+  const { name, intolerance_level } = req.body;
+  const validLevels = ['strict', 'sensitive', 'avoiding'];
+
+  if (intolerance_level && !validLevels.includes(intolerance_level)) {
+    return res.status(400).json({ error: 'Niveau d\'intolérance invalide' });
+  }
+
+  try {
+    await db.query(
+      'UPDATE users SET name = COALESCE(?, name), intolerance_level = COALESCE(?, intolerance_level) WHERE id = ?',
+      [name || null, intolerance_level || null, req.userId]
+    );
+    const [rows] = await db.query(
+      'SELECT id, name, email, intolerance_level FROM users WHERE id = ?',
+      [req.userId]
+    );
+    res.json({ user: rows[0] });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
+

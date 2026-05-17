@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Restaure la session au démarrage
   useEffect(() => {
     (async () => {
       try {
@@ -42,8 +41,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUser = async (updatedUser) => {
+    const merged = { ...user, ...updatedUser };
+    await AsyncStorage.setItem('user', JSON.stringify(merged));
+    setUser(merged);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
