@@ -2,7 +2,7 @@
   "expo": {
     "name": "GluGlu",
     "slug": "gluglu",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "icon": "./assets/icon.png",
     "splash": {
       "backgroundColor": "#1C2B1D",
@@ -12,7 +12,7 @@
     "ios": {
       "icon": "./assets/icon.png",
       "bundleIdentifier": "fr.ninoguinberteau.gluglu",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

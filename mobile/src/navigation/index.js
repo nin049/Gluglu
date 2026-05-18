@@ -89,6 +89,22 @@ function AppTabs() {
           ),
         }}
       />
+      <Tab.Screen
+        name="Profil"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profil',
+          tabBarIcon: ({ color }) => (
+            <View style={{
+              width: 22, height: 22, borderRadius: 11,
+              borderWidth: 2, borderColor: color,
+              justifyContent: 'center', alignItems: 'center',
+            }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+            </View>
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -101,11 +117,6 @@ function AppNavigator() {
         name="ScanDetail"
         component={ScanDetailScreen}
         options={{ ...HEADER_OPTIONS, headerShown: true, title: 'Détail' }}
-      />
-      <RootStack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ ...HEADER_OPTIONS, headerShown: true, title: 'Mon profil' }}
       />
     </RootStack.Navigator>
   );

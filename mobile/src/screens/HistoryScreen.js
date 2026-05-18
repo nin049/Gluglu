@@ -69,9 +69,11 @@ export default function HistoryScreen({ navigation }) {
     if (total === 0) return null;
     const safe = scans.filter(s => s.risk_level === 'safe').length;
     const high = scans.filter(s => s.risk_level === 'high').length;
+    const medium = scans.filter(s => s.risk_level === 'medium' || s.risk_level === 'low').length;
     return {
       total,
       safePct: Math.round((safe / total) * 100),
+      mediumPct: Math.round((medium / total) * 100),
       highPct: Math.round((high / total) * 100),
     };
   }, [scans]);
@@ -165,9 +167,6 @@ export default function HistoryScreen({ navigation }) {
 
       <View style={styles.header}>
         <Text style={styles.brand}>GLUGLU</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 0 }}>
-          <Text style={styles.profileText}>Profil</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.titleRow}>
@@ -185,6 +184,10 @@ export default function HistoryScreen({ navigation }) {
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, { color: '#4A7C59' }]}>{stats.safePct}%</Text>
             <Text style={styles.statLabel}>Sûrs</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={[styles.statNumber, { color: '#D4631A' }]}>{stats.mediumPct}%</Text>
+            <Text style={styles.statLabel}>Modérés</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, { color: '#C62828' }]}>{stats.highPct}%</Text>
