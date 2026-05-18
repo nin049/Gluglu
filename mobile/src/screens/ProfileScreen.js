@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Alert, ActivityIndicator, StatusBar,
+  Alert, ActivityIndicator, StatusBar, TextInput,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../api';
@@ -24,24 +24,30 @@ const LEVELS = [
   },
 ];
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen() {
   const { user, logout, updateUser } = useAuth();
   const [selected, setSelected] = useState(user?.intolerance_level || 'sensitive');
+  const [username, setUsername] = useState(user?.username || '');
   const [saving, setSaving] = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
+
+  const hasChanges = selected !== user?.intolerance_level || username.trim().toLowerCase() !== (user?.username || '');
 
   const handleSave = async () => {
-    if (selected === user?.intolerance_level) {
-      navigation.goBack();
-      return;
+    if (!hasChanges) return;
+    if (username.trim() && !/^[a-zA-Z0-9_]{3,20}$/.test(username.trim())) {
+      return Alert.alert('Pseudo invalide', 'Le pseudo doit faire 3-20 caractères (lettres, chiffres, _).');
     }
     setSaving(true);
     try {
-      const { data } = await authAPI.updateProfile({ intolerance_level: selected });
+      const payload = { intolerance_level: selected };
+      if (username.trim()) payload.username = username.trim().toLowerCase();
+      const { data } = await authAPI.updateProfile(payload);
       await updateUser(data.user);
-      Alert.alert('Profil mis à jour', 'Vos préférences ont été enregistrées.');
-      navigation.goBack();
-    } catch {
-      Alert.alert('Erreur', 'Impossible de mettre à jour le profil.');
+      setEditingUsername(false);
+      Alert.alert('✅ Profil mis à jour', 'Vos préférences ont été enregistrées.');
+    } catch (err) {
+      Alert.alert('Erreur', err?.response?.data?.error || 'Impossible de mettre à jour le profil.');
     } finally {
       setSaving(false);
     }
@@ -68,6 +74,27 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.infoLabel}>Email</Text>
           <Text style={styles.infoValue}>{user?.email}</Text>
         </View>
+        <View style={styles.separator} />
+        <TouchableOpacity style={styles.infoRow} onPress={() => setEditingUsername(true)} activeOpacity={0.7}>
+          <Text style={styles.infoLabel}>Pseudo @</Text>
+          {editingUsername ? (
+            <TextInput
+              style={styles.usernameInput}
+              value={username}
+              onChangeText={setUsername}
+              autoFocus
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="mon_pseudo"
+              placeholderTextColor="#BDBDBD"
+              onBlur={() => setEditingUsername(false)}
+            />
+          ) : (
+            <Text style={[styles.infoValue, !user?.username && styles.infoValueEmpty]}>
+              {user?.username ? `@${user.username}` : 'Ajouter un pseudo'}
+            </Text>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Niveau d'intolérance */}
@@ -98,9 +125,9 @@ export default function ProfileScreen({ navigation }) {
       ))}
 
       <TouchableOpacity
-        style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+        style={[styles.saveBtn, (!hasChanges || saving) && styles.saveBtnDisabled]}
         onPress={handleSave}
-        disabled={saving}
+        disabled={!hasChanges || saving}
         activeOpacity={0.85}
       >
         {saving ? (
@@ -135,6 +162,12 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   infoLabel: { fontSize: 15, color: '#3A3A3C' },
   infoValue: { fontSize: 15, color: '#8E8E93', maxWidth: '60%', textAlign: 'right' },
+  infoValueEmpty: { color: '#4A7C59', fontStyle: 'italic' },
+  usernameInput: {
+    fontSize: 15, color: '#1C1C1E', textAlign: 'right',
+    minWidth: 120, maxWidth: '60%',
+    borderBottomWidth: 1, borderBottomColor: '#4A7C59', paddingBottom: 2,
+  },
   separator: { height: 1, backgroundColor: '#E5E5EA', marginHorizontal: 16 },
 
   sectionLabel: { fontSize: 11, fontWeight: '600', color: '#8E8E93', letterSpacing: 1.5, textTransform: 'uppercase', paddingHorizontal: 24, marginBottom: 6 },
@@ -165,7 +198,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C2B1D', borderRadius: 12,
     paddingVertical: 16, alignItems: 'center',
   },
-  saveBtnDisabled: { opacity: 0.6 },
+  saveBtnDisabled: { opacity: 0.4 },
   saveBtnText: { color: '#FAFAF8', fontSize: 15, fontWeight: '600', letterSpacing: 0.3 },
 
   divider: { height: 1, backgroundColor: '#F0F0F0', marginHorizontal: 24, marginTop: 32, marginBottom: 8 },

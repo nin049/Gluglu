@@ -11,7 +11,10 @@ const RISK = {
   unknown: { label: 'Indéterminé',         barColor: '#8E8E93', bg: '#F2F2F7', textColor: '#3A3A3C' },
 };
 
-// Interpolation couleur verte→orange→rouge selon score 0–100
+const RISK_COLORS = {
+  safe: '#4A7C59', low: '#C49A00', medium: '#D4631A', high: '#C62828', unknown: '#8E8E93',
+};
+
 function scoreToColor(score) {
   if (score <= 30) return '#4A7C59';
   if (score <= 60) return '#D4631A';
@@ -20,7 +23,8 @@ function scoreToColor(score) {
 
 export default function ProductScreen({ route, navigation }) {
   const { result } = route.params;
-  const { product, analysis } = result;
+  const { product, analysis, family_analysis, group_analysis } = result;
+  const memberAnalysis = group_analysis || family_analysis || [];
   const risk = RISK[analysis.risk_level] || RISK.unknown;
   const score = analysis.risk_score ?? 0;
   const barColor = scoreToColor(score);
@@ -121,6 +125,34 @@ export default function ProductScreen({ route, navigation }) {
 
       <View style={styles.separator} />
 
+      {/* Analyse groupe */}
+      {memberAnalysis.length > 0 && (
+        <>
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Analyse du groupe</Text>
+            {memberAnalysis.map((member) => (
+              <View key={member.member_id || member.user_id} style={styles.familyRow}>
+                <View style={[styles.familyAvatar, { backgroundColor: RISK_COLORS[member.risk_level] + '22' }]}>
+                  <Text style={[styles.familyAvatarText, { color: RISK_COLORS[member.risk_level] }]}>
+                    {(member.member_name || member.name || '?').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.familyName}>{member.member_name || member.name}</Text>
+                <View style={[styles.familyBadge, { backgroundColor: RISK_COLORS[member.risk_level] + '22' }]}>
+                  <Text style={[styles.familyBadgeText, { color: RISK_COLORS[member.risk_level] }]}>
+                    {RISK[member.risk_level]?.label || '—'}
+                  </Text>
+                </View>
+                <Text style={[styles.familyScore, { color: RISK_COLORS[member.risk_level] }]}>
+                  {member.risk_score}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.separator} />
+        </>
+      )}
+
       <View style={styles.disclaimer}>
         <Text style={styles.disclaimerText}>
           Cet outil est un assistant d'analyse et ne constitue pas un avis médical certifié.
@@ -201,6 +233,16 @@ const styles = StyleSheet.create({
 
   shareBtn: { marginHorizontal: 24, marginTop: 10, paddingVertical: 12, alignItems: 'center' },
   shareText: { color: '#8E8E93', fontSize: 14, letterSpacing: 0.2 },
+
+  familyRow: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10,
+  },
+  familyAvatar: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  familyAvatarText: { fontSize: 15, fontWeight: '700' },
+  familyName: { flex: 1, fontSize: 15, fontWeight: '500', color: '#1C1C1E' },
+  familyBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  familyBadgeText: { fontSize: 11, fontWeight: '600' },
+  familyScore: { fontSize: 16, fontWeight: '700', width: 32, textAlign: 'right', letterSpacing: -0.5 },
 });
 
 

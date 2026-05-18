@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 export default function RegisterScreen({ navigation }) {
   const { register } = useAuth();
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -16,8 +17,10 @@ export default function RegisterScreen({ navigation }) {
   const [focused, setFocused] = useState(null);
 
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password || !confirm)
+    if (!name.trim() || !username.trim() || !email.trim() || !password || !confirm)
       return Alert.alert('Champs manquants', 'Veuillez remplir tous les champs.');
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username.trim()))
+      return Alert.alert('Pseudo invalide', 'Le pseudo doit faire 3-20 caractères (lettres, chiffres, _).');
     if (password !== confirm)
       return Alert.alert('Erreur', 'Les mots de passe ne correspondent pas.');
     if (password.length < 8)
@@ -25,7 +28,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await register(name.trim(), email.trim().toLowerCase(), password);
+      await register(name.trim(), email.trim().toLowerCase(), password, username.trim().toLowerCase());
     } catch (err) {
       Alert.alert('Erreur', err.response?.data?.error || 'Impossible de créer le compte.');
     } finally {
@@ -64,6 +67,10 @@ export default function RegisterScreen({ navigation }) {
 
           {field('name', 'Prénom', {
             value: name, onChangeText: setName, placeholder: 'Jean',
+          })}
+          {field('username', 'Pseudo @', {
+            value: username, onChangeText: setUsername,
+            placeholder: 'jean_dupont', autoCapitalize: 'none', autoCorrect: false,
           })}
           {field('email', 'Adresse e-mail', {
             value: email, onChangeText: setEmail,

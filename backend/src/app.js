@@ -5,6 +5,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const scanRoutes = require('./routes/scans');
+const groupRoutes = require('./routes/groups');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/scans', scanRoutes);
+app.use('/api/groups', groupRoutes);
 
 // Health check (racine + /api/health pour o2switch)
 app.get('/', (req, res) => res.json({ status: 'ok', app: 'GluGlu API' }));

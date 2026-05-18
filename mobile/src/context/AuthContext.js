@@ -27,8 +27,8 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await authAPI.register({ name, email, password });
+  const register = async (name, email, password, username) => {
+    const { data } = await authAPI.register({ name, email, password, username });
     await AsyncStorage.multiSet([
       ['token', data.token],
       ['user', JSON.stringify(data.user)],

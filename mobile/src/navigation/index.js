@@ -11,6 +11,9 @@ import ProductScreen from '../screens/ProductScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import ScanDetailScreen from '../screens/ScanDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import GroupsScreen from '../screens/GroupsScreen';
+import GroupDetailScreen from '../screens/GroupDetailScreen';
+import GroupInvitationsScreen from '../screens/GroupInvitationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -90,6 +93,22 @@ function AppTabs() {
         }}
       />
       <Tab.Screen
+        name="Groupes"
+        component={GroupsScreen}
+        options={{
+          tabBarLabel: 'Groupes',
+          tabBarIcon: ({ color }) => (
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', gap: 3 }}>
+                <View style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: color }} />
+                <View style={{ width: 10, height: 10, borderRadius: 5, borderWidth: 2, borderColor: color }} />
+              </View>
+              <View style={{ width: 14, height: 2, backgroundColor: color, borderRadius: 1, marginTop: 2 }} />
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Profil"
         component={ProfileScreen}
         options={{
@@ -117,6 +136,16 @@ function AppNavigator() {
         name="ScanDetail"
         component={ScanDetailScreen}
         options={{ ...HEADER_OPTIONS, headerShown: true, title: 'Détail' }}
+      />
+      <RootStack.Screen
+        name="GroupDetail"
+        component={GroupDetailScreen}
+        options={{ ...HEADER_OPTIONS, headerShown: true, title: 'Groupe' }}
+      />
+      <RootStack.Screen
+        name="GroupInvitations"
+        component={GroupInvitationsScreen}
+        options={{ ...HEADER_OPTIONS, headerShown: true, title: 'Invitations reçues' }}
       />
     </RootStack.Navigator>
   );
