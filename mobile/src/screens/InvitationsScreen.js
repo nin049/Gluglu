@@ -28,7 +28,7 @@ export default function InvitationsScreen({ navigation }) {
     try {
       await familyAPI.acceptInvitation(id);
       setInvitations((prev) => prev.filter((i) => i.id !== id));
-      Alert.alert('✅ Accepté', 'Vous avez rejoint le groupe famille !');
+      Alert.alert('Accepté', 'Vous avez rejoint le groupe famille !');
     } catch (_) {
       Alert.alert('Erreur', 'Impossible d\'accepter l\'invitation');
     } finally {
@@ -62,7 +62,6 @@ export default function InvitationsScreen({ navigation }) {
 
       {invitations.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>📬</Text>
           <Text style={styles.emptyText}>Aucune invitation en attente</Text>
         </View>
       ) : (

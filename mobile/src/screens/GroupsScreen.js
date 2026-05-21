@@ -7,12 +7,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { groupsAPI } from '../api/index';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const LEVEL_LABELS = { strict: 'Cœliaque', sensitive: 'Sensible', avoiding: 'Évitement' };
 const LEVEL_COLORS = { strict: '#C62828', sensitive: '#D4631A', avoiding: '#4A7C59' };
 
 export default function GroupsScreen({ navigation }) {
   const { user, updateUser } = useAuth();
+  const { t } = useLanguage();
   const [groups, setGroups] = useState([]);
   const [activeGroupId, setActiveGroupId] = useState(user?.active_group_id || null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function GroupsScreen({ navigation }) {
       setActiveGroupId(groupsRes.data.active_group_id);
       setPendingCount(invRes.data.invitations?.length || 0);
     } catch {
-      Alert.alert('Erreur', 'Impossible de charger les groupes');
+      Alert.alert(t.common.error, 'Impossible de charger les groupes');
     } finally {
       setLoading(false);
     }
@@ -54,7 +56,7 @@ export default function GroupsScreen({ navigation }) {
       setNewGroupName('');
       setShowCreate(false);
     } catch (err) {
-      Alert.alert('Erreur', err?.response?.data?.error || 'Impossible de créer le groupe');
+      Alert.alert(t.common.error, err?.response?.data?.error || 'Impossible de créer le groupe');
     } finally {
       setCreating(false);
     }
@@ -67,7 +69,7 @@ export default function GroupsScreen({ navigation }) {
       setActiveGroupId(groupId);
       await updateUser({ active_group_id: groupId });
     } catch {
-      Alert.alert('Erreur', 'Impossible de changer le groupe actif');
+      Alert.alert(t.common.error, 'Impossible de changer le groupe actif');
     }
   };
 
@@ -87,7 +89,7 @@ export default function GroupsScreen({ navigation }) {
           <View style={styles.cardInfo}>
             <View style={styles.cardTitleRow}>
               <Text style={[styles.cardName, isActive && styles.cardNameActive]}>{item.name}</Text>
-              {isOwner && <Text style={styles.ownerBadge}>Créateur</Text>}
+              {isOwner && <Text style={styles.ownerBadge}>{t.groups.creatorBadge}</Text>}
             </View>
             <Text style={styles.cardSub}>
               {item.member_count} membre{item.member_count > 1 ? 's' : ''}
@@ -97,7 +99,7 @@ export default function GroupsScreen({ navigation }) {
         <View style={styles.cardRight}>
           {isActive ? (
             <View style={styles.activeBadge}>
-              <Text style={styles.activeBadgeText}>Actif</Text>
+              <Text style={styles.activeBadgeText}>{t.groups.activeBadge}</Text>
             </View>
           ) : (
             <TouchableOpacity
@@ -105,7 +107,7 @@ export default function GroupsScreen({ navigation }) {
               onPress={() => handleSetActive(item.id)}
               activeOpacity={0.7}
             >
-              <Text style={styles.setActiveBtnText}>Activer</Text>
+              <Text style={styles.setActiveBtnText}>{t.groups.activate}</Text>
             </TouchableOpacity>
           )}
           <Ionicons name="chevron-forward" size={18} color="#BDBDBD" />
@@ -121,7 +123,7 @@ export default function GroupsScreen({ navigation }) {
         <Text style={styles.brand}>GLUGLU</Text>
       </View>
       <View style={styles.titleRow}>
-        <Text style={styles.pageTitle}>Groupes</Text>
+        <Text style={styles.pageTitle}>{t.groups.title}</Text>
         {pendingCount > 0 && (
           <TouchableOpacity
             style={styles.inviteBadge}
@@ -134,9 +136,7 @@ export default function GroupsScreen({ navigation }) {
         )}
       </View>
 
-      <Text style={styles.pageSub}>
-        Le groupe actif est utilisé automatiquement lors de chaque scan pour analyser si un aliment convient à tous.
-      </Text>
+      <Text style={styles.pageSub}>{t.groups.subtitle}</Text>
 
       {loading ? (
         <ActivityIndicator color="#1C2B1D" style={{ marginTop: 48 }} />
@@ -149,8 +149,8 @@ export default function GroupsScreen({ navigation }) {
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ionicons name="people-outline" size={52} color="#BDBDBD" />
-              <Text style={styles.emptyTitle}>Aucun groupe</Text>
-              <Text style={styles.emptySub}>Créez un groupe et invitez vos proches pour analyser les produits ensemble.</Text>
+              <Text style={styles.emptyTitle}>{t.groups.emptyTitle}</Text>
+              <Text style={styles.emptySub}>{t.groups.emptyMsg}</Text>
             </View>
           }
         />
@@ -159,7 +159,7 @@ export default function GroupsScreen({ navigation }) {
       {/* Bouton créer */}
       <TouchableOpacity style={styles.fab} onPress={() => setShowCreate(true)} activeOpacity={0.85}>
         <Ionicons name="add" size={20} color="#FAFAF8" style={{ marginRight: 8 }} />
-        <Text style={styles.fabText}>Créer un groupe</Text>
+        <Text style={styles.fabText}>{t.groups.create}</Text>
       </TouchableOpacity>
 
       {/* Modal création */}
@@ -169,10 +169,10 @@ export default function GroupsScreen({ navigation }) {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Nouveau groupe</Text>
+            <Text style={styles.modalTitle}>{t.groups.newGroup}</Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Nom du groupe (ex: Ma famille)"
+              placeholder={t.groups.groupNamePlaceholder}
               placeholderTextColor="#BDBDBD"
               value={newGroupName}
               onChangeText={setNewGroupName}
@@ -184,14 +184,14 @@ export default function GroupsScreen({ navigation }) {
                 style={styles.modalCancelBtn}
                 onPress={() => { setShowCreate(false); setNewGroupName(''); }}
               >
-                <Text style={styles.modalCancelText}>Annuler</Text>
+                <Text style={styles.modalCancelText}>{t.common.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalCreateBtn, creating && { opacity: 0.6 }]}
                 onPress={handleCreate}
                 disabled={creating}
               >
-                {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalCreateText}>Créer</Text>}
+                {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalCreateText}>{t.common.add}</Text>}
               </TouchableOpacity>
             </View>
           </View>

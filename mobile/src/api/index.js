@@ -5,10 +5,12 @@ const BASE_URL = 'https://gluglu-backend.ninoguinberteau.fr/api';
 
 const api = axios.create({ baseURL: BASE_URL });
 
-// Injecte le token JWT dans chaque requête
+// Injecte le token JWT ET la langue préférée dans chaque requête
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  const lang = await AsyncStorage.getItem('app_language') || 'fr';
+  config.headers['x-app-language'] = lang;
   return config;
 });
 

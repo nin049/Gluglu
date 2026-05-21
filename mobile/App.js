@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { AuthProvider } from './src/context/AuthContext';
+import { LanguageProvider } from './src/context/LanguageContext';
 import RootNavigator from './src/navigation';
 import LoadingScreen from './src/screens/LoadingScreen';
 import { authAPI } from './src/api/index';
@@ -69,12 +70,14 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <NavigationContainer ref={navigationRef}>
-          <StatusBar style="auto" />
-          <RootNavigator />
-        </NavigationContainer>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <NavigationContainer ref={navigationRef}>
+            <StatusBar style="auto" />
+            <RootNavigator />
+          </NavigationContainer>
+        </AuthProvider>
+      </LanguageProvider>
     </GestureHandlerRootView>
   );
 }

@@ -8,26 +8,30 @@ import { Swipeable } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scansAPI } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const RISK_COLORS = {
   safe: '#4A7C59', low: '#C49A00', medium: '#D4631A', high: '#C62828', unknown: '#8E8E93',
 };
-const RISK_LABELS = {
-  safe: 'Sans risque', low: 'Faible', medium: 'Modéré', high: 'Élevé', unknown: 'Inconnu',
-};
-
-const FILTERS = [
-  { id: 'all', label: 'Tous' },
-  { id: 'safe', label: 'Sûr' },
-  { id: 'low', label: 'Faible' },
-  { id: 'medium', label: 'Modéré' },
-  { id: 'high', label: 'Élevé' },
-];
 
 const CACHE_KEY = 'history_cache';
 
 export default function HistoryScreen({ navigation }) {
   const { logout } = useAuth();
+  const { t } = useLanguage();
+
+  const RISK_LABELS = {
+    safe: t.history.riskSafe, low: t.history.riskLow,
+    medium: t.history.riskMedium, high: t.history.riskHigh, unknown: t.history.riskUnknown,
+  };
+
+  const FILTERS = [
+    { id: 'all', label: t.history.filterAll },
+    { id: 'safe', label: t.history.filterSafe },
+    { id: 'low', label: t.history.filterLow },
+    { id: 'medium', label: t.history.filterMedium },
+    { id: 'high', label: t.history.filterHigh },
+  ];
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -93,15 +97,15 @@ export default function HistoryScreen({ navigation }) {
   }, [scans, activeFilter, search]);
 
   const handleDelete = (id) => {
-    Alert.alert('Supprimer ce scan ?', 'Cette action est irréversible.', [
-      { text: 'Annuler', style: 'cancel', onPress: () => swipeableRefs.current[id]?.close() },
+    Alert.alert(t.history.deleteConfirm, t.common.irreversible, [
+      { text: t.common.cancel, style: 'cancel', onPress: () => swipeableRefs.current[id]?.close() },
       {
-        text: 'Supprimer', style: 'destructive', onPress: async () => {
+        text: t.common.delete, style: 'destructive', onPress: async () => {
           try {
             await scansAPI.deleteScan(id);
             setScans((prev) => prev.filter((s) => s.id !== id));
           } catch {
-            Alert.alert('Erreur', 'Impossible de supprimer ce scan.');
+            Alert.alert(t.common.error, t.history.errorDelete);
             swipeableRefs.current[id]?.close();
           }
         },
@@ -146,7 +150,7 @@ export default function HistoryScreen({ navigation }) {
         )}
 
         <View style={styles.cardBody}>
-          <Text style={styles.cardProduct} numberOfLines={1}>{item.product_name || 'Produit inconnu'}</Text>
+          <Text style={styles.cardProduct} numberOfLines={1}>{item.product_name || t.common.unknownProduct}</Text>
           {item.brand ? <Text style={styles.cardBrand} numberOfLines={1}>{item.brand}</Text> : null}
           <Text style={styles.cardDate}>{formatDate(item.scanned_at)}</Text>
         </View>
@@ -170,8 +174,8 @@ export default function HistoryScreen({ navigation }) {
       </View>
 
       <View style={styles.titleRow}>
-        <Text style={styles.pageTitle}>Historique</Text>
-        {isOffline && <Text style={styles.offlineBadge}>Hors-ligne</Text>}
+        <Text style={styles.pageTitle}>{t.history.title}</Text>
+        {isOffline && <Text style={styles.offlineBadge}>{t.history.offline}</Text>}
       </View>
 
       {/* Statistiques */}
@@ -179,19 +183,19 @@ export default function HistoryScreen({ navigation }) {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>{stats.total}</Text>
-            <Text style={styles.statLabel}>Scans</Text>
+            <Text style={styles.statLabel}>{t.history.statScans}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, { color: '#4A7C59' }]}>{stats.safePct}%</Text>
-            <Text style={styles.statLabel}>Sûrs</Text>
+            <Text style={styles.statLabel}>{t.history.statSafe}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, { color: '#D4631A' }]}>{stats.mediumPct}%</Text>
-            <Text style={styles.statLabel}>Modérés</Text>
+            <Text style={styles.statLabel}>{t.history.statMedium}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, { color: '#C62828' }]}>{stats.highPct}%</Text>
-            <Text style={styles.statLabel}>Élevés</Text>
+            <Text style={styles.statLabel}>{t.history.statHigh}</Text>
           </View>
         </View>
       )}
@@ -200,7 +204,7 @@ export default function HistoryScreen({ navigation }) {
       <View style={styles.searchRow}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Rechercher un produit..."
+          placeholder={t.history.searchPlaceholder}
           placeholderTextColor="#BDBDBD"
           value={search}
           onChangeText={setSearch}
@@ -228,11 +232,9 @@ export default function HistoryScreen({ navigation }) {
         <View style={styles.center}><ActivityIndicator color="#1C2B1D" /></View>
       ) : filtered.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyTitle}>{scans.length === 0 ? 'Aucun scan' : 'Aucun résultat'}</Text>
+          <Text style={styles.emptyTitle}>{scans.length === 0 ? t.history.emptyTitle : t.history.noResultTitle}</Text>
           <Text style={styles.emptySub}>
-            {scans.length === 0
-              ? 'Vos analyses de produits apparaîtront ici.'
-              : 'Essayez un autre filtre ou une autre recherche.'}
+            {scans.length === 0 ? t.history.emptyMsg : t.history.noResultMsg}
           </Text>
         </View>
       ) : (

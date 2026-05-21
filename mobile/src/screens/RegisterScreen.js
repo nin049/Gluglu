@@ -5,9 +5,11 @@ import {
   ScrollView, ActivityIndicator, StatusBar,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function RegisterScreen({ navigation }) {
   const { register } = useAuth();
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -18,19 +20,19 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!name.trim() || !username.trim() || !email.trim() || !password || !confirm)
-      return Alert.alert('Champs manquants', 'Veuillez remplir tous les champs.');
+      return Alert.alert(t.common.error, t.auth.errorEmptyFields);
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(username.trim()))
-      return Alert.alert('Pseudo invalide', 'Le pseudo doit faire 3-20 caractères (lettres, chiffres, _).');
+      return Alert.alert(t.common.error, t.auth.errorUsernameFormat);
     if (password !== confirm)
-      return Alert.alert('Erreur', 'Les mots de passe ne correspondent pas.');
+      return Alert.alert(t.common.error, t.auth.errorPasswordMismatch);
     if (password.length < 8)
-      return Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 8 caractères.');
+      return Alert.alert(t.common.error, t.auth.errorPasswordLength);
 
     setLoading(true);
     try {
       await register(name.trim(), email.trim().toLowerCase(), password, username.trim().toLowerCase());
     } catch (err) {
-      Alert.alert('Erreur', err.response?.data?.error || 'Impossible de créer le compte.');
+      Alert.alert(t.common.error, err.response?.data?.error || t.auth.errorRegister);
     } finally {
       setLoading(false);
     }
@@ -63,27 +65,27 @@ export default function RegisterScreen({ navigation }) {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.formTitle}>Créer un compte</Text>
+          <Text style={styles.formTitle}>{t.auth.registerTitle}</Text>
 
-          {field('name', 'Prénom', {
-            value: name, onChangeText: setName, placeholder: 'Jean',
+          {field('name', t.auth.firstName, {
+            value: name, onChangeText: setName, placeholder: t.auth.firstNamePlaceholder,
           })}
-          {field('username', 'Pseudo @', {
+          {field('username', t.auth.username, {
             value: username, onChangeText: setUsername,
-            placeholder: 'jean_dupont', autoCapitalize: 'none', autoCorrect: false,
+            placeholder: t.auth.usernamePlaceholder, autoCapitalize: 'none', autoCorrect: false,
           })}
-          {field('email', 'Adresse e-mail', {
+          {field('email', t.auth.email, {
             value: email, onChangeText: setEmail,
-            placeholder: 'exemple@domaine.com',
+            placeholder: t.auth.emailPlaceholder,
             keyboardType: 'email-address', autoCapitalize: 'none', autoCorrect: false,
           })}
-          {field('password', 'Mot de passe', {
+          {field('password', t.auth.password, {
             value: password, onChangeText: setPassword,
-            placeholder: 'Minimum 8 caractères', secureTextEntry: true,
+            placeholder: t.auth.passwordMinPlaceholder, secureTextEntry: true,
           })}
-          {field('confirm', 'Confirmer le mot de passe', {
+          {field('confirm', t.auth.confirmPassword, {
             value: confirm, onChangeText: setConfirm,
-            placeholder: '••••••••', secureTextEntry: true,
+            placeholder: t.auth.passwordPlaceholder, secureTextEntry: true,
           })}
 
           <TouchableOpacity
@@ -94,7 +96,7 @@ export default function RegisterScreen({ navigation }) {
           >
             {loading
               ? <ActivityIndicator color="#FAFAF8" />
-              : <Text style={styles.btnText}>Créer mon compte</Text>
+              : <Text style={styles.btnText}>{t.auth.createAccount}</Text>
             }
           </TouchableOpacity>
 
@@ -103,7 +105,7 @@ export default function RegisterScreen({ navigation }) {
             onPress={() => navigation.navigate('Login')}
             activeOpacity={0.7}
           >
-            <Text style={styles.backBtnText}>Déjà un compte — Se connecter</Text>
+            <Text style={styles.backBtnText}>{t.auth.alreadyAccount}</Text>
           </TouchableOpacity>
         </View>
 
@@ -142,4 +144,3 @@ const styles = StyleSheet.create({
   backBtn: { alignItems: 'center', marginTop: 20, paddingVertical: 8 },
   backBtnText: { color: '#8E8E93', fontSize: 14 },
 });
-

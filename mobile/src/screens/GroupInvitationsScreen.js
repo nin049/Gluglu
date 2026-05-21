@@ -32,7 +32,7 @@ export default function GroupInvitationsScreen({ navigation }) {
     try {
       await groupsAPI.acceptInvitation(invitationId);
       setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
-      Alert.alert('✅ Vous avez rejoint le groupe !');
+      Alert.alert('Vous avez rejoint le groupe !');
     } catch (err) {
       Alert.alert('Erreur', err?.response?.data?.error || 'Impossible d\'accepter');
     } finally {

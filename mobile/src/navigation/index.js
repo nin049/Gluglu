@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, TouchableOpacity, Text } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
 import LoginScreen from '../screens/LoginScreen';
@@ -14,6 +14,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import GroupsScreen from '../screens/GroupsScreen';
 import GroupDetailScreen from '../screens/GroupDetailScreen';
 import GroupInvitationsScreen from '../screens/GroupInvitationsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -111,8 +112,21 @@ function AppTabs() {
       <Tab.Screen
         name="Profil"
         component={ProfileScreen}
-        options={{
+        options={({ navigation }) => ({
           tabBarLabel: 'Profil',
+          headerShown: true,
+          headerStyle: { backgroundColor: '#FAFAF8' },
+          headerShadowVisible: false,
+          headerTitle: 'Profil',
+          headerTitleStyle: { fontWeight: '600', fontSize: 16, color: '#1C1C1E' },
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              style={{ marginRight: 16, padding: 4 }}
+            >
+              <Text style={{ fontSize: 14, color: '#4A7C59', fontWeight: '600' }}>Paramètres</Text>
+            </TouchableOpacity>
+          ),
           tabBarIcon: ({ color }) => (
             <View style={{
               width: 22, height: 22, borderRadius: 11,
@@ -122,7 +136,7 @@ function AppTabs() {
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
             </View>
           ),
-        }}
+        })}
       />
     </Tab.Navigator>
   );
@@ -146,6 +160,11 @@ function AppNavigator() {
         name="GroupInvitations"
         component={GroupInvitationsScreen}
         options={{ ...HEADER_OPTIONS, headerShown: true, title: 'Invitations reçues' }}
+      />
+      <RootStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ ...HEADER_OPTIONS, headerShown: true, title: 'Paramètres' }}
       />
     </RootStack.Navigator>
   );

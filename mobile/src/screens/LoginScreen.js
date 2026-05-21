@@ -5,9 +5,11 @@ import {
   ScrollView, ActivityIndicator, StatusBar,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,12 +17,12 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password)
-      return Alert.alert('Champs manquants', 'Veuillez remplir tous les champs.');
+      return Alert.alert(t.common.error, t.auth.errorEmptyFields);
     setLoading(true);
     try {
       await login(email.trim().toLowerCase(), password);
     } catch (err) {
-      Alert.alert('Erreur', err.response?.data?.error || 'Identifiants incorrects');
+      Alert.alert(t.common.error, err.response?.data?.error || t.auth.errorLogin);
     } finally {
       setLoading(false);
     }
@@ -37,19 +39,19 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.header}>
           <View style={styles.logoMark} />
           <Text style={styles.brand}>GLUGLU</Text>
-          <Text style={styles.tagline}>Détection du risque gluten</Text>
+          <Text style={styles.tagline}>{t.auth.brandTagline}</Text>
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.formTitle}>Connexion</Text>
+          <Text style={styles.formTitle}>{t.auth.loginTitle}</Text>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Adresse e-mail</Text>
+            <Text style={styles.label}>{t.auth.email}</Text>
             <TextInput
               style={[styles.input, focused === 'email' && styles.inputFocused]}
               value={email}
               onChangeText={setEmail}
-              placeholder="exemple@domaine.com"
+              placeholder={t.auth.emailPlaceholder}
               placeholderTextColor="#BDBDBD"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -60,12 +62,12 @@ export default function LoginScreen({ navigation }) {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Mot de passe</Text>
+            <Text style={styles.label}>{t.auth.password}</Text>
             <TextInput
               style={[styles.input, focused === 'password' && styles.inputFocused]}
               value={password}
               onChangeText={setPassword}
-              placeholder="••••••••"
+              placeholder={t.auth.passwordPlaceholder}
               placeholderTextColor="#BDBDBD"
               secureTextEntry
               onFocus={() => setFocused('password')}
@@ -81,13 +83,13 @@ export default function LoginScreen({ navigation }) {
           >
             {loading
               ? <ActivityIndicator color="#FAFAF8" />
-              : <Text style={styles.btnText}>Se connecter</Text>
+              : <Text style={styles.btnText}>{t.auth.login}</Text>
             }
           </TouchableOpacity>
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ou</Text>
+            <Text style={styles.dividerText}>{t.auth.or}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -96,7 +98,7 @@ export default function LoginScreen({ navigation }) {
             onPress={() => navigation.navigate('Register')}
             activeOpacity={0.7}
           >
-            <Text style={styles.secondaryBtnText}>Créer un compte</Text>
+            <Text style={styles.secondaryBtnText}>{t.auth.register}</Text>
           </TouchableOpacity>
         </View>
 
@@ -143,4 +145,3 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: { color: '#1C1C1E', fontSize: 15, fontWeight: '500' },
 });
-

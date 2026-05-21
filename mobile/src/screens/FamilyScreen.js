@@ -68,7 +68,7 @@ export default function FamilyScreen({ navigation }) {
     setInviting(true);
     try {
       const { data } = await familyAPI.invite(inviteEmail.trim());
-      Alert.alert('✅ Invitation envoyée', data.message);
+      Alert.alert('Invitation envoyée', data.message);
       setInviteEmail('');
       setShowInviteForm(false);
     } catch (err) {
@@ -122,7 +122,7 @@ export default function FamilyScreen({ navigation }) {
           onPress={() => navigation.navigate('Invitations')}
           activeOpacity={0.8}
         >
-          <Text style={styles.inviteBtnText}>📬 Invitations reçues</Text>
+          <Text style={styles.inviteBtnText}>Invitations reçues</Text>
         </TouchableOpacity>
       </View>
 
@@ -230,7 +230,7 @@ export default function FamilyScreen({ navigation }) {
                 <Text style={styles.newBtnText}>+ Ajouter un membre</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.newBtnSecondary} onPress={() => setShowInviteForm(true)} activeOpacity={0.85}>
-                <Text style={styles.newBtnSecondaryText}>✉️ Inviter un ami</Text>
+                <Text style={styles.newBtnSecondaryText}>Inviter un ami</Text>
               </TouchableOpacity>
             </View>
           )}

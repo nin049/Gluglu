@@ -2,13 +2,14 @@ import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Share,
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 
-const RISK = {
-  safe:    { label: 'Sans risque détecté', barColor: '#4A7C59', bg: '#EEF4EE', textColor: '#1C2B1D' },
-  low:     { label: 'Risque faible',       barColor: '#C49A00', bg: '#FBF5E6', textColor: '#7A5C00' },
-  medium:  { label: 'Risque modéré',       barColor: '#D4631A', bg: '#FBF0E6', textColor: '#8B3A00' },
-  high:    { label: 'Risque élevé',        barColor: '#C62828', bg: '#FBE9E9', textColor: '#7B1111' },
-  unknown: { label: 'Indéterminé',         barColor: '#8E8E93', bg: '#F2F2F7', textColor: '#3A3A3C' },
+const RISK_BASE = {
+  safe:    { bg: '#EEF4EE', textColor: '#1C2B1D' },
+  low:     { bg: '#FBF5E6', textColor: '#7A5C00' },
+  medium:  { bg: '#FBF0E6', textColor: '#8B3A00' },
+  high:    { bg: '#FBE9E9', textColor: '#7B1111' },
+  unknown: { bg: '#F2F2F7', textColor: '#3A3A3C' },
 };
 
 function scoreToColor(score) {
@@ -19,16 +20,18 @@ function scoreToColor(score) {
 
 export default function ScanDetailScreen({ route, navigation }) {
   const { scan } = route.params;
+  const { t } = useLanguage();
 
   const riskLevel = scan.risk_level || 'unknown';
-  const risk = RISK[riskLevel] || RISK.unknown;
+  const riskBase = RISK_BASE[riskLevel] || RISK_BASE.unknown;
+  const riskLabel = t.product.risk[riskLevel] || t.product.risk.unknown;
   const score = scan.risk_score ?? 0;
   const barColor = scoreToColor(score);
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `GluGlu - Analyse gluten\n\n${scan.product_name}${scan.brand ? ` (${scan.brand})` : ''}\n\nScore de risque : ${score}/100 — ${risk.label}\n\n${scan.ai_explanation || ''}\n\nAnalysé avec GluGlu`,
+        message: t.product.shareMessage(scan.product_name, scan.brand, score, riskLabel, scan.ai_explanation || ''),
       });
     } catch {}
   };
@@ -44,21 +47,18 @@ export default function ScanDetailScreen({ route, navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <Text style={styles.backText}>Retour</Text>
-      </TouchableOpacity>
 
       {scan.image_url ? (
         <Image source={{ uri: scan.image_url }} style={styles.productImage} resizeMode="contain" />
       ) : (
         <View style={styles.productImagePlaceholder}>
-          <Text style={styles.placeholderText}>Aucune photo disponible</Text>
+          <Text style={styles.placeholderText}>{t.common.noPhoto}</Text>
         </View>
       )}
 
-      <View style={[styles.scoreCard, { backgroundColor: risk.bg }]}>
-        <Text style={[styles.scoreNumber, { color: risk.textColor }]}>{score}</Text>
-        <Text style={[styles.scoreLabel, { color: risk.textColor }]}>{risk.label}</Text>
+      <View style={[styles.scoreCard, { backgroundColor: riskBase.bg }]}>
+        <Text style={[styles.scoreNumber, { color: riskBase.textColor }]}>{score}</Text>
+        <Text style={[styles.scoreLabel, { color: riskBase.textColor }]}>{riskLabel}</Text>
 
         <View style={styles.scoreBarBg}>
           <View style={[styles.scoreBarFill, { width: `${score}%`, backgroundColor: barColor }]} />
@@ -67,14 +67,14 @@ export default function ScanDetailScreen({ route, navigation }) {
         </View>
 
         <View style={styles.barLegend}>
-          <Text style={[styles.barLegendText, { color: '#4A7C59' }]}>Sûr</Text>
-          <Text style={[styles.barLegendText, { color: '#D4631A' }]}>Modéré</Text>
-          <Text style={[styles.barLegendText, { color: '#C62828' }]}>Élevé</Text>
+          <Text style={[styles.barLegendText, { color: '#4A7C59' }]}>{t.product.scaleSafe}</Text>
+          <Text style={[styles.barLegendText, { color: '#D4631A' }]}>{t.product.scaleMedium}</Text>
+          <Text style={[styles.barLegendText, { color: '#C62828' }]}>{t.product.scaleHigh}</Text>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Produit</Text>
+        <Text style={styles.sectionLabel}>{t.product.sectionProduct}</Text>
         <Text style={styles.productName}>{scan.product_name}</Text>
         {scan.brand ? <Text style={styles.productBrand}>{scan.brand}</Text> : null}
         <Text style={styles.productBarcode}>{scan.barcode}</Text>
@@ -85,11 +85,11 @@ export default function ScanDetailScreen({ route, navigation }) {
       {scan.ai_explanation ? (
         <>
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Analyse</Text>
+            <Text style={styles.sectionLabel}>{t.product.sectionAnalysis}</Text>
             <Text style={styles.bodyText}>{scan.ai_explanation}</Text>
             {suspectIngredients.length > 0 && (
               <View style={styles.suspectContainer}>
-                <Text style={styles.suspectTitle}>Ingrédients suspects</Text>
+                <Text style={styles.suspectTitle}>{t.product.suspectIngredients}</Text>
                 {suspectIngredients.map((ing, i) => (
                   <View key={i} style={styles.suspectRow}>
                     <View style={styles.suspectDot} />
@@ -106,7 +106,7 @@ export default function ScanDetailScreen({ route, navigation }) {
       {scan.ingredients ? (
         <>
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Ingrédients</Text>
+            <Text style={styles.sectionLabel}>{t.product.sectionIngredients}</Text>
             <Text style={styles.bodyText}>{scan.ingredients}</Text>
           </View>
           <View style={styles.separator} />
@@ -116,7 +116,7 @@ export default function ScanDetailScreen({ route, navigation }) {
       {scan.allergens ? (
         <>
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Allergènes déclarés</Text>
+            <Text style={styles.sectionLabel}>{t.product.sectionAllergens}</Text>
             <Text style={styles.bodyText}>{scan.allergens}</Text>
           </View>
           <View style={styles.separator} />
@@ -125,13 +125,13 @@ export default function ScanDetailScreen({ route, navigation }) {
 
       <View style={styles.dateSection}>
         <Text style={styles.dateText}>
-          Scanné le {new Date(scan.scanned_at).toLocaleDateString('fr-FR', {
+          {t.history.scannedOn} {new Date(scan.scanned_at).toLocaleDateString('fr-FR', {
             day: '2-digit', month: 'long', year: 'numeric',
             hour: '2-digit', minute: '2-digit',
           })}
         </Text>
         <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Text style={styles.shareText}>Partager ce résultat</Text>
+          <Text style={styles.shareText}>{t.product.share}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -141,9 +141,6 @@ export default function ScanDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAF8' },
   content: { paddingBottom: 48 },
-
-  backBtn: { padding: 20, paddingBottom: 0 },
-  backText: { fontSize: 14, color: '#1C2B1D', fontWeight: '600', letterSpacing: 0.3 },
 
   productImage: { width: '100%', height: 220, backgroundColor: '#F2F2F7' },
   productImagePlaceholder: {

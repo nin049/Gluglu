@@ -2,13 +2,14 @@ import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Image, Share,
 } from 'react-native';
+import { useLanguage } from '../context/LanguageContext';
 
-const RISK = {
-  safe:    { label: 'Sans risque détecté', barColor: '#4A7C59', bg: '#EEF4EE', textColor: '#1C2B1D' },
-  low:     { label: 'Risque faible',       barColor: '#C49A00', bg: '#FBF5E6', textColor: '#7A5C00' },
-  medium:  { label: 'Risque modéré',       barColor: '#D4631A', bg: '#FBF0E6', textColor: '#8B3A00' },
-  high:    { label: 'Risque élevé',        barColor: '#C62828', bg: '#FBE9E9', textColor: '#7B1111' },
-  unknown: { label: 'Indéterminé',         barColor: '#8E8E93', bg: '#F2F2F7', textColor: '#3A3A3C' },
+const RISK_BASE = {
+  safe:    { barColor: '#4A7C59', bg: '#EEF4EE', textColor: '#1C2B1D' },
+  low:     { barColor: '#C49A00', bg: '#FBF5E6', textColor: '#7A5C00' },
+  medium:  { barColor: '#D4631A', bg: '#FBF0E6', textColor: '#8B3A00' },
+  high:    { barColor: '#C62828', bg: '#FBE9E9', textColor: '#7B1111' },
+  unknown: { barColor: '#8E8E93', bg: '#F2F2F7', textColor: '#3A3A3C' },
 };
 
 const RISK_COLORS = {
@@ -23,17 +24,19 @@ function scoreToColor(score) {
 
 export default function ProductScreen({ route, navigation }) {
   const { result } = route.params;
+  const { t } = useLanguage();
   const { product, analysis, family_analysis, group_analysis } = result;
   const memberAnalysis = group_analysis || family_analysis || [];
-  const risk = RISK[analysis.risk_level] || RISK.unknown;
+  const riskBase = RISK_BASE[analysis.risk_level] || RISK_BASE.unknown;
+  const riskLabel = t.product.risk[analysis.risk_level] || t.product.risk.unknown;
   const score = analysis.risk_score ?? 0;
   const barColor = scoreToColor(score);
+  const isCertified = product.is_certified_gluten_free === true;
 
   const handleShare = async () => {
-    const riskLabel = risk.label;
     try {
       await Share.share({
-        message: `GluGlu - Analyse gluten\n\n${product.name}${product.brand ? ` (${product.brand})` : ''}\n\nScore de risque : ${score}/100 — ${riskLabel}\n\n${analysis.explanation}\n\nAnalysé avec GluGlu`,
+        message: t.product.shareMessage(product.name, product.brand, score, riskLabel, analysis.explanation),
       });
     } catch {}
   };
@@ -42,7 +45,6 @@ export default function ProductScreen({ route, navigation }) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Photo produit */}
       {product.image ? (
         <Image
           source={{ uri: product.image }}
@@ -51,48 +53,48 @@ export default function ProductScreen({ route, navigation }) {
         />
       ) : (
         <View style={styles.productImagePlaceholder}>
-          <Text style={styles.placeholderText}>Aucune photo disponible</Text>
+          <Text style={styles.placeholderText}>{t.common.noPhoto}</Text>
         </View>
       )}
 
-      {/* Score principal */}
-      <View style={[styles.scoreCard, { backgroundColor: risk.bg }]}>
-        <Text style={[styles.scoreNumber, { color: risk.textColor }]}>{score}</Text>
-        <Text style={[styles.scoreLabel, { color: risk.textColor }]}>{risk.label}</Text>
+      <View style={[styles.scoreCard, { backgroundColor: riskBase.bg }]}>
+        <Text style={[styles.scoreNumber, { color: riskBase.textColor }]}>{score}</Text>
+        <Text style={[styles.scoreLabel, { color: riskBase.textColor }]}>{riskLabel}</Text>
 
-        {/* Barre colorée verte→orange→rouge */}
         <View style={styles.scoreBarBg}>
           <View style={[styles.scoreBarFill, { width: `${score}%`, backgroundColor: barColor }]} />
-          {/* Marqueurs */}
           <View style={[styles.barMarker, { left: '30%' }]} />
           <View style={[styles.barMarker, { left: '60%' }]} />
         </View>
 
         <View style={styles.barLegend}>
-          <Text style={[styles.barLegendText, { color: '#4A7C59' }]}>Sûr</Text>
-          <Text style={[styles.barLegendText, { color: '#D4631A' }]}>Modéré</Text>
-          <Text style={[styles.barLegendText, { color: '#C62828' }]}>Élevé</Text>
+          <Text style={[styles.barLegendText, { color: '#4A7C59' }]}>{t.product.scaleSafe}</Text>
+          <Text style={[styles.barLegendText, { color: '#D4631A' }]}>{t.product.scaleMedium}</Text>
+          <Text style={[styles.barLegendText, { color: '#C62828' }]}>{t.product.scaleHigh}</Text>
         </View>
       </View>
 
-      {/* Infos produit */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Produit</Text>
+        <Text style={styles.sectionLabel}>{t.product.sectionProduct}</Text>
         <Text style={styles.productName}>{product.name}</Text>
         {product.brand ? <Text style={styles.productBrand}>{product.brand}</Text> : null}
         <Text style={styles.productBarcode}>{product.barcode}</Text>
+        {isCertified && (
+          <View style={styles.certifiedBadge}>
+            <Text style={styles.certifiedBadgeText}>✓ {t.product.certifiedBadge}</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.separator} />
 
-      {/* Analyse IA */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Analyse</Text>
+        <Text style={styles.sectionLabel}>{t.product.sectionAnalysis}</Text>
         <Text style={styles.bodyText}>{analysis.explanation}</Text>
 
         {analysis.suspect_ingredients?.length > 0 && (
           <View style={styles.suspectContainer}>
-            <Text style={styles.suspectTitle}>Ingrédients suspects</Text>
+            <Text style={styles.suspectTitle}>{t.product.suspectIngredients}</Text>
             {analysis.suspect_ingredients.map((ing, i) => (
               <View key={i} style={styles.suspectRow}>
                 <View style={styles.suspectDot} />
@@ -107,7 +109,7 @@ export default function ProductScreen({ route, navigation }) {
         <>
           <View style={styles.separator} />
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Ingrédients</Text>
+            <Text style={styles.sectionLabel}>{t.product.sectionIngredients}</Text>
             <Text style={styles.bodyText}>{product.ingredients}</Text>
           </View>
         </>
@@ -117,7 +119,7 @@ export default function ProductScreen({ route, navigation }) {
         <>
           <View style={styles.separator} />
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Allergènes déclarés</Text>
+            <Text style={styles.sectionLabel}>{t.product.sectionAllergens}</Text>
             <Text style={styles.bodyText}>{product.allergens}</Text>
           </View>
         </>
@@ -125,11 +127,10 @@ export default function ProductScreen({ route, navigation }) {
 
       <View style={styles.separator} />
 
-      {/* Analyse groupe */}
       {memberAnalysis.length > 0 && (
         <>
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Analyse du groupe</Text>
+            <Text style={styles.sectionLabel}>{t.product.sectionGroup}</Text>
             {memberAnalysis.map((member) => (
               <View key={member.member_id || member.user_id} style={styles.familyRow}>
                 <View style={[styles.familyAvatar, { backgroundColor: RISK_COLORS[member.risk_level] + '22' }]}>
@@ -140,7 +141,7 @@ export default function ProductScreen({ route, navigation }) {
                 <Text style={styles.familyName}>{member.member_name || member.name}</Text>
                 <View style={[styles.familyBadge, { backgroundColor: RISK_COLORS[member.risk_level] + '22' }]}>
                   <Text style={[styles.familyBadgeText, { color: RISK_COLORS[member.risk_level] }]}>
-                    {RISK[member.risk_level]?.label || '—'}
+                    {t.product.risk[member.risk_level] || '—'}
                   </Text>
                 </View>
                 <Text style={[styles.familyScore, { color: RISK_COLORS[member.risk_level] }]}>
@@ -154,17 +155,15 @@ export default function ProductScreen({ route, navigation }) {
       )}
 
       <View style={styles.disclaimer}>
-        <Text style={styles.disclaimerText}>
-          Cet outil est un assistant d'analyse et ne constitue pas un avis médical certifié.
-        </Text>
+        <Text style={styles.disclaimerText}>{t.product.disclaimer}</Text>
       </View>
 
       <TouchableOpacity style={styles.newScanBtn} onPress={() => navigation.goBack()} activeOpacity={0.85}>
-        <Text style={styles.newScanText}>Scanner un autre produit</Text>
+        <Text style={styles.newScanText}>{t.product.scanAnother}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.7}>
-        <Text style={styles.shareText}>Partager ce résultat</Text>
+        <Text style={styles.shareText}>{t.product.share}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -174,10 +173,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAF8' },
   content: { paddingBottom: 48 },
 
-  productImage: {
-    width: '100%', height: 220,
-    backgroundColor: '#F2F2F7',
-  },
+  productImage: { width: '100%', height: 220, backgroundColor: '#F2F2F7' },
   productImagePlaceholder: {
     width: '100%', height: 120,
     backgroundColor: '#F2F2F7',
@@ -185,9 +181,7 @@ const styles = StyleSheet.create({
   },
   placeholderText: { fontSize: 12, color: '#BDBDBD' },
 
-  scoreCard: {
-    margin: 20, borderRadius: 16, padding: 28, alignItems: 'center',
-  },
+  scoreCard: { margin: 20, borderRadius: 16, padding: 28, alignItems: 'center' },
   scoreNumber: { fontSize: 64, fontWeight: '700', letterSpacing: -2 },
   scoreLabel: { fontSize: 16, fontWeight: '500', marginTop: 4, letterSpacing: 0.2 },
 
@@ -200,10 +194,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 0, bottom: 0,
     width: 1, backgroundColor: 'rgba(255,255,255,0.6)',
   },
-  barLegend: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    width: '100%', marginTop: 6,
-  },
+  barLegend: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 6 },
   barLegendText: { fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
 
   section: { paddingHorizontal: 24, paddingVertical: 20 },
@@ -211,6 +202,14 @@ const styles = StyleSheet.create({
   productName: { fontSize: 20, fontWeight: '600', color: '#1C1C1E', letterSpacing: -0.3 },
   productBrand: { fontSize: 14, color: '#8E8E93', marginTop: 4 },
   productBarcode: { fontSize: 12, color: '#BDBDBD', marginTop: 4, letterSpacing: 0.5 },
+
+  certifiedBadge: {
+    alignSelf: 'flex-start', marginTop: 10,
+    backgroundColor: '#E8F5E9', borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 5,
+    borderWidth: 1, borderColor: '#4A7C59',
+  },
+  certifiedBadgeText: { fontSize: 12, fontWeight: '700', color: '#2E6B44', letterSpacing: 0.3 },
 
   bodyText: { fontSize: 15, color: '#3A3A3C', lineHeight: 23 },
 
@@ -234,9 +233,7 @@ const styles = StyleSheet.create({
   shareBtn: { marginHorizontal: 24, marginTop: 10, paddingVertical: 12, alignItems: 'center' },
   shareText: { color: '#8E8E93', fontSize: 14, letterSpacing: 0.2 },
 
-  familyRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10,
-  },
+  familyRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10 },
   familyAvatar: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   familyAvatarText: { fontSize: 15, fontWeight: '700' },
   familyName: { flex: 1, fontSize: 15, fontWeight: '500', color: '#1C1C1E' },
@@ -244,5 +241,3 @@ const styles = StyleSheet.create({
   familyBadgeText: { fontSize: 11, fontWeight: '600' },
   familyScore: { fontSize: 16, fontWeight: '700', width: 32, textAlign: 'right', letterSpacing: -0.5 },
 });
-
-
